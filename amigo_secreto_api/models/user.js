@@ -1,0 +1,1 @@
+//gerencia o usuário comum (CRUD - AUTENTICAÇÃO)

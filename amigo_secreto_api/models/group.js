@@ -1,0 +1,1 @@
+//Gerencia o grupo de amigo secreto (criação, sorteio e participação)

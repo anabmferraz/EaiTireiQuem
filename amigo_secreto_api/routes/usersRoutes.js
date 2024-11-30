@@ -1,0 +1,1 @@
+//rotas para usuários comuns 
