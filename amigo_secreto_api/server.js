@@ -5,6 +5,7 @@ const cors = require('cors');
 const swaggerSetup = require('./swagger'); // Arquivo de configuração do Swagger
 const routes = require('./routes'); // Centraliza todas as rotas da aplicação
 const { errorHandler } = require('./middleware/error'); // Middleware de erros
+const manipuladorDeErros = require('./middleware/error');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,9 +21,9 @@ swaggerSetup(app);
 app.use('/api', routes);
 
 // Middleware de tratamento de erros
-app.use(errorHandler);
+app.use(manipuladorDeErros);
 
 // Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server rodando em http://localhost:${PORT}`);
 });
