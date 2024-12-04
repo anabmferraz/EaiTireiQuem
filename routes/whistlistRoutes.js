@@ -1,10 +1,21 @@
 const express = require("express");
 const Wishlist = require("../models/wishlist");
 const { auth } = require("../middleware/auth");
-const { validateWishlistItem } = require("../utils/validation"); // Certifique-se de que a função exista
+const { validateWishlistItem } = require("../utils/validation");
 const router = express.Router();
 
-// Criar uma nova lista de desejos
+const getWishlistMiddleware = async (req, res, next) => {
+  try {
+    req.listaDesejos = await Wishlist.buscarPorUsuario(req.user.id);
+    if (!req.listaDesejos) {
+      return res.status(404).json({ error: "Lista de desejos não encontrada" });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 router.post("/", auth, async (req, res) => {
   try {
     const listaDesejos = await Wishlist.criar({
@@ -17,34 +28,31 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// Adicionar um item à lista de desejos
-router.post("/items", auth, async (req, res) => {
+router.post("/items", auth, getWishlistMiddleware, async (req, res) => {
   try {
     if (!validateWishlistItem(req.body)) {
       return res.status(400).json({ error: "Dados do item inválidos" });
     }
-    const item = await Wishlist.adicionarItem(req.user.id, req.body);
+    const item = await Wishlist.adicionarItem(req.listaDesejos.id, req.body);
     res.status(201).json(item);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Remover um item da lista de desejos
-router.delete("/items/:itemId", auth, async (req, res) => {
+router.delete("/items/:itemId", auth, getWishlistMiddleware, async (req, res) => {
   try {
-    await Wishlist.removerItem(req.user.id, req.params.itemId);
+    await Wishlist.removerItem(req.listaDesejos.id, req.params.itemId);
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Atualizar um item na lista de desejos
-router.patch("/items/:itemId", auth, async (req, res) => {
+router.patch("/items/:itemId", auth, getWishlistMiddleware, async (req, res) => {
   try {
     const item = await Wishlist.atualizarItem(
-      req.user.id,
+      req.listaDesejos.id,
       req.params.itemId,
       req.body
     );
@@ -54,10 +62,9 @@ router.patch("/items/:itemId", auth, async (req, res) => {
   }
 });
 
-// Obter a lista de desejos de um usuário
-router.get("/usuario/:userId", auth, async (req, res) => {
+router.get("/usuario", auth, async (req, res) => {
   try {
-    const listaDesejos = await Wishlist.buscarPorUsuario(req.params.userId);
+    const listaDesejos = await Wishlist.buscarPorUsuario(req.user.id);
     if (!listaDesejos) {
       return res.status(404).json({ error: "Lista de desejos não encontrada" });
     }
