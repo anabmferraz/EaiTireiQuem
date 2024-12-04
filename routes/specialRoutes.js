@@ -1,6 +1,6 @@
 const express = require("express");
 const { auth, Admin } = require("../middleware/auth");
-const groupService = require("../services/groupService");
+const groupService = require("../routes/logicagrupo");
 
 const router = express.Router();
 
@@ -82,4 +82,3 @@ router.get("/:id/resultado", auth, groupService.getDrawResults);
 router.get("/usuario", auth, groupService.getUserGroups);
 
 module.exports = router;
-

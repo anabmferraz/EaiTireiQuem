@@ -1,5 +1,6 @@
 function embaralhar(array) {
   const arrayEmbaralhado = [...array];
+
   for (let i = arrayEmbaralhado.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arrayEmbaralhado[i], arrayEmbaralhado[j]] = [
@@ -7,6 +8,7 @@ function embaralhar(array) {
       arrayEmbaralhado[i],
     ];
   }
+
   return arrayEmbaralhado;
 }
 

@@ -1,15 +1,19 @@
+const express = require("express");
+const router = express.Router();
 const User = require("../models/user");
 
-async function createUser(req, res) {
+// Criar usuário
+router.post("/", async (req, res) => {
   try {
     const user = await User.criar(req.body);
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-}
+});
 
-async function getAllUsers(req, res) {
+// Obter todos os usuários
+router.get("/", async (req, res) => {
   try {
     const users = await User.buscarTodos();
     const sanitizedUsers = users.map(removeSensitiveData);
@@ -17,14 +21,11 @@ async function getAllUsers(req, res) {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+});
 
 function removeSensitiveData(user) {
   const { senha, ...safeUser } = user;
   return safeUser;
 }
 
-module.exports = {
-  createUser,
-  getAllUsers,
-};
+module.exports = router;

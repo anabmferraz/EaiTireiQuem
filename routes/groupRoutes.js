@@ -1,88 +1,66 @@
-const express = require("express");
 const Group = require("../models/group");
 const User = require("../models/user");
-const { auth, isAdmin } = require("../middleware/auth");
 const { validateGroupName } = require("../utils/validation");
 
-const router = express.Router();
-
-const verificarPermissaoGrupo = (grupo, usuario) => {
-  if (grupo.adminId !== usuario.id && usuario.role !== "admin") {
-    throw new Error("Não autorizado");
-  }
-};
-
-router.post("/", auth, async (req, res) => {
+async function createGroup(req, res) {
   try {
-    const { name } = req.body;
-
-    if (!validateGroupName(name)) {
+    if (!validateGroupName(req.body.name)) {
       return res.status(400).json({ error: "Nome do grupo inválido" });
     }
 
     const grupo = await Group.create({
-      name,
+      name: req.body.name,
       adminId: req.user.id,
     });
-
     res.status(201).json(grupo);
   } catch (error) {
-    res
-      .status(error.message === "Não autorizado" ? 403 : 500)
-      .json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
-});
+}
 
-router.patch("/:id/adicionar-usuario", auth, async (req, res) => {
+async function addParticipant(req, res) {
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "ID do usuário é obrigatório" });
-    }
-
     const grupo = await Group.findById(req.params.id);
-    if (!grupo) {
-      return res.status(404).json({ error: "Grupo não encontrado" });
+    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
+
+    if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Não autorizado" });
     }
 
-    verificarPermissaoGrupo(grupo, req.user);
+    const grupoAtualizado = await Group.addParticipant(
+      req.params.id,
+      req.body.userId
+    );
 
-    const grupoAtualizado = await Group.addParticipant(req.params.id, userId);
-
-    res.json(grupoAtualizado);
+    // Não enviamos mais o e-mail, então apenas retornamos o grupo atualizado
+    res.status(200).json(grupoAtualizado);
   } catch (error) {
-    res
-      .status(error.message === "Não autorizado" ? 403 : 500)
-      .json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
-});
+}
 
-router.post("/:id/sorteio", auth, async (req, res) => {
+async function performDraw(req, res) {
   try {
     const grupo = await Group.findById(req.params.id);
-    if (!grupo) {
-      return res.status(404).json({ error: "Grupo não encontrado" });
-    }
+    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
 
-    verificarPermissaoGrupo(grupo, req.user);
+    if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Não autorizado" });
+    }
 
     const grupoAtualizado = await Group.performDraw(req.params.id);
 
-    res.json({ message: "Sorteio realizado com sucesso", grupoAtualizado });
+    // Não enviamos mais os e-mails, então apenas retornamos a resposta do sorteio realizado com sucesso
+    res.json({ message: "Sorteio realizado com sucesso" });
   } catch (error) {
-    res
-      .status(error.message === "Não autorizado" ? 403 : 500)
-      .json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
-});
+}
 
-router.get("/:id/resultado", auth, async (req, res) => {
+async function getDrawResults(req, res) {
   try {
     const grupo = await Group.findById(req.params.id);
-    if (!grupo) {
-      return res.status(404).json({ error: "Grupo não encontrado" });
-    }
+    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
 
     if (!grupo.drawResults) {
       return res
@@ -90,31 +68,35 @@ router.get("/:id/resultado", auth, async (req, res) => {
         .json({ error: "O sorteio ainda não foi realizado" });
     }
 
+    // Se for admin ou o próprio administrador do grupo
     if (req.user.role === "admin" || grupo.adminId === req.user.id) {
       return res.json(grupo.drawResults);
     }
 
     if (grupo.participants.includes(req.user.id)) {
-      const parSorteado = grupo.drawResults[req.user.id];
-      const receptor = await User.findById(parSorteado);
+      const receptor = await User.findById(grupo.drawResults[req.user.id]);
       return res.json({ match: { id: receptor.id, name: receptor.name } });
     }
 
-    throw new Error("Não autorizado");
+    res.status(403).json({ error: "Não autorizado" });
   } catch (error) {
-    res
-      .status(error.message === "Não autorizado" ? 403 : 500)
-      .json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
-});
+}
 
-router.get("/usuario", auth, async (req, res) => {
+async function getUserGroups(req, res) {
   try {
     const grupos = await Group.getUserGroups(req.user.id);
     res.json(grupos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+}
 
-module.exports = router;
+module.exports = {
+  createGroup,
+  addParticipant,
+  performDraw,
+  getDrawResults,
+  getUserGroups,
+};

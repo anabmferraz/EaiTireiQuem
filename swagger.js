@@ -11,19 +11,17 @@ const opcoesSwagger = {
     },
     servers: [
       {
-        url: "http://localhost:3000", // URL do servidor
+        url: process.env.BASE_URL || "http://localhost:3000",
         description: "Servidor de Desenvolvimento",
       },
     ],
   },
-  apis: ["./routes/*.js"], // Certifique-se de que as rotas tenham a documentação Swagger.
+  apis: ["./routes/*.js"],
 };
 
-const specs = swaggerJsdoc(opcoesSwagger);
-
-function swaggerSetup(app) {
-  // Configura o Swagger UI no caminho /api-docs
+const swaggerSetup = (app) => {
+  const specs = swaggerJsdoc(opcoesSwagger);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
-}
+};
 
 module.exports = swaggerSetup;

@@ -1,37 +1,24 @@
 const Group = require("../models/group");
 const { embaralhar } = require("../utils/arrays");
 
+const MAX_TENTATIVAS = 5;
+
 async function redistribuiSorteio(groupId) {
   const group = await Group.findById(groupId);
-
-  if (!group) {
-    throw new Error("Grupo não encontrado");
-  }
-
-  if (!group.drawResults) {
+  if (!group) throw new Error("Grupo não encontrado");
+  if (!group.drawResults)
     throw new Error("Não existe sorteio para redistribuir");
-  }
 
   const participantes = [...group.participantes];
   let novosResultados;
   let tentativas = 0;
-  const maxTentativas = 5;
 
   do {
-    novosResultados = {};
-    const participantesEmbaralhados = embaralhar([...participantes]);
-
-    for (let i = 0; i < participantesEmbaralhados.length; i++) {
-      const doador = participantesEmbaralhados[i];
-      const receptor =
-        participantesEmbaralhados[(i + 1) % participantesEmbaralhados.length];
-      novosResultados[doador] = receptor;
-    }
-
+    novosResultados = embaralharSorteio(participantes);
     tentativas++;
   } while (
     resultadosIguais(group.drawResults, novosResultados) &&
-    tentativas < maxTentativas
+    tentativas < MAX_TENTATIVAS
   );
 
   if (resultadosIguais(group.drawResults, novosResultados)) {
@@ -41,13 +28,27 @@ async function redistribuiSorteio(groupId) {
   group.drawResults = novosResultados;
   group.drawDate = new Date().toISOString();
 
-  await Group.atualizar(groupId, group); // Certifique-se de que `atualizar` existe no modelo `Group`.
+  await Group.atualizar(groupId, group);
   return group;
 }
 
+function embaralharSorteio(participantes) {
+  const sorteio = {};
+  const participantesEmbaralhados = embaralhar([...participantes]);
+
+  participantesEmbaralhados.forEach((doador, i) => {
+    const receptor =
+      participantesEmbaralhados[(i + 1) % participantesEmbaralhados.length];
+    sorteio[doador] = receptor;
+  });
+
+  return sorteio;
+}
+
 function resultadosIguais(resultados1, resultados2) {
-  const chaves = Object.keys(resultados1);
-  return chaves.every((chave) => resultados1[chave] === resultados2[chave]);
+  return Object.keys(resultados1).every(
+    (key) => resultados1[key] === resultados2[key]
+  );
 }
 
 module.exports = {
