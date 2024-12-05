@@ -1,6 +1,7 @@
 const express = require("express");
 const { auth, Admin } = require("../middleware/auth");
-const groupService = require("../routes/logicagrupo");
+const groupService = require("../routes/groupRoutes");
+console.log(groupService); // Adicione este log
 
 const router = express.Router();
 
