@@ -1,7 +1,7 @@
 const express = require("express");
 const { auth, Admin } = require("../middleware/auth");
-const groupService = require("../routes/groupRoutes");
-console.log(groupService); // Adicione este log
+const logicagrupo = require("../routes/groupRoutes");
+console.log(logicagrupo); // Adicione este log
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ const router = express.Router();
  *               name:
  *                 type: string
  */
-router.post("/", auth, groupService.createGroup);
+router.post("/", auth, logicagrupo.createGroup);
 
 /**
  * @swagger
@@ -38,7 +38,7 @@ router.post("/", auth, groupService.createGroup);
  *         schema:
  *           type: string
  */
-router.patch("/:id/adicionar-usuario", auth, groupService.addParticipant);
+router.patch("/:id/adicionar-usuario", auth, logicagrupo.addParticipant);
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ router.patch("/:id/adicionar-usuario", auth, groupService.addParticipant);
  *         schema:
  *           type: string
  */
-router.post("/:id/sorteio", auth, groupService.performDraw);
+router.post("/:id/sorteio", auth, logicagrupo.performDraw);
 
 /**
  * @swagger
@@ -70,7 +70,7 @@ router.post("/:id/sorteio", auth, groupService.performDraw);
  *         schema:
  *           type: string
  */
-router.get("/:id/resultado", auth, groupService.getDrawResults);
+router.get("/:id/resultado", auth, logicagrupo.getDrawResults);
 
 /**
  * @swagger
@@ -80,6 +80,6 @@ router.get("/:id/resultado", auth, groupService.getDrawResults);
  *     security:
  *       - bearerAuth: []
  */
-router.get("/usuario", auth, groupService.getUserGroups);
+router.get("/usuario", auth, logicagrupo.getUserGroups);
 
 module.exports = router;

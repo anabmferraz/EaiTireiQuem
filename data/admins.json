@@ -1,9 +1,9 @@
 [
   {
     "id": "5bd46a98-3d44-4248-b007-7ad8c4e35f89",
-    "nome": "administrador",
-    "email": "admin@exemplo.com",
-    "senha": "$2b$10$SMZyoQ6PJ5gLgonWnVsymOM/nZMjnXcFNv3s7TqfgxGxO35Qyy062",
+    "nome": "admin",
+    "email": "admin@gmail.com",
+    "senha": "admin123",
     "papel": "admin",
     "criadoEm": "2024-12-04T22:51:35.709Z"
   }

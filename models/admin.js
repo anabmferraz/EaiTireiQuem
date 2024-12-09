@@ -20,7 +20,7 @@ class Administrador {
       id: uuidv4(),
       nome: "admin",
       email: "admin@gmail.com",
-      senha: await bcrypt.hash("admin123", 10),
+      senha: "admin123",
       papel: "admin",
       criadoEm: new Date().toISOString(),
     };

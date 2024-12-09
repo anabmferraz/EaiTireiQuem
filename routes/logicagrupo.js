@@ -1,32 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const Group = require("../models/group");
-const User = require("../models/user");
-const { validateGroupName } = require("../utils/validation");
+const { auth } = require("../middleware/auth"); // Middleware de autenticação
+const { validarNomeGrupo } = require("../utils/validation"); // Certifique-se de que esta importação está correta
 
 // Rota para criar grupo
-router.post("/", async (req, res) => {
-  // implementação
-});
+router.post("/", auth, async (req, res) => {
+  try {
+    const { name } = req.body;
 
-// Rota para adicionar participante
-router.patch("/:id/adicionar-usuario", async (req, res) => {
-  // implementação
-});
+    // Validação do nome do grupo
+    if (!validarNomeGrupo(name)) {
+      return res.status(400).json({ error: "Nome do grupo inválido" });
+    }
 
-// Rota para realizar sorteio
-router.post("/:id/sorteio", async (req, res) => {
-  // implementação
-});
+    // Criação do grupo
+    const grupo = await Group.criar({
+      nome: name,
+      idAdmin: req.user.id, // Middleware `auth` popula `req.user`
+    });
 
-// Rota para resultados do sorteio
-router.get("/:id/resultado", async (req, res) => {
-  // implementação
-});
-
-// Rota para obter grupos do usuário
-router.get("/usuario", async (req, res) => {
-  // implementação
+    res.status(201).json(grupo); // Retorna o grupo criado
+  } catch (error) {
+    console.error("[Erro ao criar grupo]:", error.message);
+    res.status(500).json({ error: "Erro interno ao criar o grupo" });
+  }
 });
 
 // Exportar o roteador

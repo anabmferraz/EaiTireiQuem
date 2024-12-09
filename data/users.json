@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "8e945621-9883-4385-8683-7ae3fdaef197",
+    "nome": "João Silva",
+    "email": "joao.silva@gmail.com",
+    "senha": "$2b$10$e9ovFTW.v28ebMdzBRhlqOcC2K0y21P79htCR9GEFHDBsLvnCrj3K",
+    "papel": "participante",
+    "criadoEm": "2024-12-05T23:33:08.079Z"
+  }
+]

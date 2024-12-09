@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "c6068678-b724-4243-b816-aa596ab8387f",
+    "nome": "grupo teste",
+    "idAdmin": "5bd46a98-3d44-4248-b007-7ad8c4e35f89",
+    "participantes": [
+      "5bd46a98-3d44-4248-b007-7ad8c4e35f89"
+    ],
+    "status": "aberto",
+    "dataCriacao": "2024-12-07T04:38:08.960Z",
+    "resultadoSorteio": null,
+    "dataSorteio": null
+  }
+]
