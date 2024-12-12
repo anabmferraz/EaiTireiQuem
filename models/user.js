@@ -69,4 +69,4 @@ class User {
 }
 User.inicializar();
 
-module.exports = Usuario;
+module.exports = User;

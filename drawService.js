@@ -1,9 +1,9 @@
-const Group = require("../models/group");
-const { embaralhar } = require("../utils/arrays");
+const Group = require("./models/group");
+const { embaralhar } = require("./utils/arrays");
 
 const MAX_TENTATIVAS = 5;
 
-async function redistribuiSorteio(groupId) {
+async function reajustarSorteio(groupId) {
   const group = await Group.findById(groupId);
   if (!group) throw new Error("Grupo não encontrado");
   if (!group.drawResults)
@@ -52,5 +52,5 @@ function resultadosIguais(resultados1, resultados2) {
 }
 
 module.exports = {
-  redistribuiSorteio,
+  reajustarSorteio,
 };

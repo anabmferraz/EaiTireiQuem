@@ -8,7 +8,7 @@ const {
   realizarSorteio,
   obterResultadosSorteio,
   obterGruposUsuario,
-} = require("../controllers/groupController");
+} = require("../controller/groupController");
 
 /**
  * @swagger

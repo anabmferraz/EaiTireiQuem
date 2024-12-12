@@ -1,6 +1,6 @@
 const express = require("express");
 const { auth, isAdmin } = require("../middleware/auth");
-const { reajustar } = require("../services/drawService");
+const { reajustar } = require("../drawService");
 
 const router = express.Router();
 

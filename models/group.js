@@ -1,7 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { embaralhar } = require("../utils/arrayUtils");
+const { embaralhar } = require("../utils/arrays");
 
 const ARQUIVO_GRUPOS = path.join(__dirname, "../data/grupos.json");
 
