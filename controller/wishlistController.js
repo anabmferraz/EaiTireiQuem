@@ -1,22 +1,7 @@
-const express = require("express");
-const Wishlist = require("../models/wishlist");
-const { auth } = require("../middleware/auth");
+const Wishlist = require("../models/Wishlist");
 const { validateWishlistItem } = require("../utils/validation");
-const router = express.Router();
 
-const getWishlistMiddleware = async (req, res, next) => {
-  try {
-    req.listaDesejos = await Wishlist.buscarPorUsuario(req.user.id);
-    if (!req.listaDesejos) {
-      return res.status(404).json({ error: "Lista de desejos não encontrada" });
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-router.post("/", auth, async (req, res) => {
+const criarWishlist = async (req, res) => {
   try {
     const listaDesejos = await Wishlist.criar({
       userId: req.user.id,
@@ -26,9 +11,9 @@ router.post("/", auth, async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+};
 
-router.post("/items", auth, getWishlistMiddleware, async (req, res) => {
+const adicionarItem = async (req, res) => {
   try {
     if (!validateWishlistItem(req.body)) {
       return res.status(400).json({ error: "Dados do item inválidos" });
@@ -38,18 +23,18 @@ router.post("/items", auth, getWishlistMiddleware, async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+};
 
-router.delete("/items/:itemId", auth, getWishlistMiddleware, async (req, res) => {
+const removerItem = async (req, res) => {
   try {
     await Wishlist.removerItem(req.listaDesejos.id, req.params.itemId);
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+};
 
-router.patch("/items/:itemId", auth, getWishlistMiddleware, async (req, res) => {
+const atualizarItem = async (req, res) => {
   try {
     const item = await Wishlist.atualizarItem(
       req.listaDesejos.id,
@@ -60,9 +45,9 @@ router.patch("/items/:itemId", auth, getWishlistMiddleware, async (req, res) => 
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
+};
 
-router.get("/usuario", auth, async (req, res) => {
+const obterListaDesejosPorUsuario = async (req, res) => {
   try {
     const listaDesejos = await Wishlist.buscarPorUsuario(req.user.id);
     if (!listaDesejos) {
@@ -72,6 +57,12 @@ router.get("/usuario", auth, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+};
 
-module.exports = router;
+module.exports = {
+  criarWishlist,
+  adicionarItem,
+  removerItem,
+  atualizarItem,
+  obterListaDesejosPorUsuario,
+};

@@ -1,102 +1,128 @@
-const Group = require("../models/group");
-const User = require("../models/user");
-const { validateGroupName } = require("../utils/validation");
+// groupRoutes.js
+const express = require("express");
+const router = express.Router();
+const { auth } = require("../middleware/auth");
+const {
+  criarGrupo,
+  adicionarParticipante,
+  realizarSorteio,
+  obterResultadosSorteio,
+  obterGruposUsuario,
+} = require("../controllers/groupController");
 
-async function createGroup(req, res) {
-  try {
-    if (!validateGroupName(req.body.name)) {
-      return res.status(400).json({ error: "Nome do grupo inválido" });
-    }
+/**
+ * @swagger
+ * /api/groups:
+ *   post:
+ *     summary: Create a new Secret Santa group
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Group created successfully
+ */
+router.post("/grupos", auth, criarGrupo);
 
-    const grupo = await Group.create({
-      name: req.body.name,
-      adminId: req.user.id,
-    });
-    res.status(201).json(grupo);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+/**
+ * @swagger
+ * /api/groups/{id}/add-user:
+ *   patch:
+ *     summary: Add a participant to a group
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Participant added successfully
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Group not found
+ */
+router.patch("/grupos/:id/participantes", auth, adicionarParticipante);
 
-async function addParticipant(req, res) {
-  try {
-    const grupo = await Group.findById(req.params.id);
-    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
+/**
+ * @swagger
+ * /api/groups/{id}/draw:
+ *   post:
+ *     summary: Perform the Secret Santa draw
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Draw completed successfully
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Group not found
+ */
+router.post("/grupos/:id/sorteio", auth, realizarSorteio);
 
-    if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({ error: "Não autorizado" });
-    }
+/**
+ * @swagger
+ * /api/groups/{id}/result:
+ *   get:
+ *     summary: Get draw results
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Results retrieved successfully
+ *       400:
+ *         description: Draw has not been performed yet
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Group not found
+ */
+router.get("/grupos/:id/resultados", auth, obterResultadosSorteio);
 
-    const grupoAtualizado = await Group.addParticipant(
-      req.params.id,
-      req.body.userId
-    );
+/**
+ * @swagger
+ * /api/groups/user:
+ *   get:
+ *     summary: Get all groups a user is part of
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of groups retrieved successfully
+ */
+router.get("/grupos", auth, obterGruposUsuario);
 
-    // Não enviamos mais o e-mail, então apenas retornamos o grupo atualizado
-    res.status(200).json(grupoAtualizado);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-
-async function performDraw(req, res) {
-  try {
-    const grupo = await Group.findById(req.params.id);
-    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
-
-    if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({ error: "Não autorizado" });
-    }
-
-    const grupoAtualizado = await Group.performDraw(req.params.id);
-
-    // Não enviamos mais os e-mails, então apenas retornamos a resposta do sorteio realizado com sucesso
-    res.json({ message: "Sorteio realizado com sucesso" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-
-async function getDrawResults(req, res) {
-  try {
-    const grupo = await Group.findById(req.params.id);
-    if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
-
-    if (!grupo.drawResults) {
-      return res
-        .status(400)
-        .json({ error: "O sorteio ainda não foi realizado" });
-    }
-
-    // Se for admin ou o próprio administrador do grupo
-    if (req.user.role === "admin" || grupo.adminId === req.user.id) {
-      return res.json(grupo.drawResults);
-    }
-
-    if (grupo.participants.includes(req.user.id)) {
-      const receptor = await User.findById(grupo.drawResults[req.user.id]);
-      return res.json({ match: { id: receptor.id, name: receptor.name } });
-    }
-
-    res.status(403).json({ error: "Não autorizado" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-
-async function getUserGroups(req, res) {
-  try {
-    const grupos = await Group.getUserGroups(req.user.id);
-    res.json(grupos);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
-
-module.exports = {
-  createGroup,
-  addParticipant,
-  performDraw,
-  getDrawResults,
-  getUserGroups,
-};
+module.exports = router;

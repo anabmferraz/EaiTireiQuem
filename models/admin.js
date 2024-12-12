@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const ADMINS_FILE = path.join(__dirname, "../data/admins.json");
 
-class Administrador {
+class Admin {
   static async inicializar() {
     try {
       await fs.access(ADMINS_FILE);
@@ -14,7 +14,6 @@ class Administrador {
       await fs.writeFile(ADMINS_FILE, JSON.stringify([adminPadrao], null, 2));
     }
   }
-
   static async criarAdminPadrao() {
     return {
       id: uuidv4(),
@@ -66,6 +65,6 @@ class Administrador {
   }
 }
 
-Administrador.inicializar();
+Admin.inicializar();
 
-module.exports = Administrador;
+module.exports = Admin;

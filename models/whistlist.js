@@ -2,72 +2,58 @@ const fs = require("fs").promises;
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 
-const WISH_LIST_FILE = path.resolve(__dirname, "..", "data", "wish_list.json");
+const ARQUIVO_LISTAS_DESEJO = path.join(
+  __dirname,
+  "../data/listas_desejo.json"
+);
 
 class ListaDesejo {
-  
-  static async init() {
+  static async inicializar() {
     try {
-      await fs.access(WISH_LIST_FILE);
+      await fs.access(ARQUIVO_LISTAS_DESEJO);
     } catch {
-      await fs.writeFile(WISH_LIST_FILE, JSON.stringify([]));
+      await fs.writeFile(ARQUIVO_LISTAS_DESEJO, "[]");
     }
   }
 
-  
-  static async buscarTodos() {
-    try {
-      const dados = await fs.readFile(WISH_LIST_FILE, "utf8");
-      return JSON.parse(dados || "[]");
-    } catch (error) {
-      console.error("Erro ao ler as listas de desejos:", error);
-      return [];
-    }
+  static async buscarTodas() {
+    const dados = await fs.readFile(ARQUIVO_LISTAS_DESEJO, "utf8");
+    return JSON.parse(dados);
   }
 
-  
-  static async salvarTodos(wishList) {
-    try {
-      await fs.writeFile(WISH_LIST_FILE, JSON.stringify(wishList, null, 2));
-    } catch (error) {
-      console.error("Erro ao salvar as listas de desejos:", error);
-    }
-  }
-
-  
   static async criar({ userId, items }) {
-    const wishList = await this.buscarTodos();
+    const listas = await this.buscarTodas();
 
-    if (wishList.some((w) => w.userId === userId)) {
-      throw new Error("Lista de desejos já cadastrada para este usuário");
+    const listaExistente = listas.find((l) => l.userId === userId);
+    if (listaExistente) {
+      throw new Error("Usuário já possui uma lista de desejos");
     }
 
     const novaLista = {
       id: uuidv4(),
       userId,
       items: items.map((item) => ({
+        id: uuidv4(),
         ...item,
-        createdAt: new Date().toISOString(),
+        criadoEm: new Date().toISOString(),
       })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
     };
 
-    wishList.push(novaLista);
-    await this.salvarTodos(wishList);
+    listas.push(novaLista);
+    await this.salvarTodas(listas);
     return novaLista;
   }
 
- 
   static async buscarPorUsuario(userId) {
-    const wishList = await this.buscarTodos();
-    return wishList.find((w) => w.userId === userId);
+    const listas = await this.buscarTodas();
+    return listas.find((lista) => lista.userId === userId);
   }
 
-  
   static async adicionarItem(userId, item) {
-    const wishList = await this.buscarTodos();
-    const lista = wishList.find((w) => w.userId === userId);
+    const listas = await this.buscarTodas();
+    const lista = listas.find((l) => l.userId === userId);
 
     if (!lista) {
       throw new Error("Lista de desejos não encontrada");
@@ -76,62 +62,61 @@ class ListaDesejo {
     const novoItem = {
       id: uuidv4(),
       ...item,
-      createdAt: new Date().toISOString(),
+      criadoEm: new Date().toISOString(),
     };
 
     lista.items.push(novoItem);
-    lista.updatedAt = new Date().toISOString();
+    lista.atualizadoEm = new Date().toISOString();
 
-    await this.salvarTodos(wishList);
+    await this.salvarTodas(listas);
     return novoItem;
   }
 
-  
-  static async atualizarItem(userId, itemId, itemAtualizado) {
-    const wishList = await this.buscarTodos();
-    const lista = wishList.find((w) => w.userId === userId);
+  static async removerItem(userId, itemId) {
+    const listas = await this.buscarTodas();
+    const lista = listas.find((l) => l.userId === userId);
 
     if (!lista) {
       throw new Error("Lista de desejos não encontrada");
     }
 
-    const itemIndex = lista.items.findIndex((item) => item.id === itemId);
-    if (itemIndex === -1) {
+    const indiceItem = lista.items.findIndex((item) => item.id === itemId);
+    if (indiceItem === -1) {
       throw new Error("Item não encontrado");
     }
 
-    lista.items[itemIndex] = {
-      ...lista.items[itemIndex],
-      ...itemAtualizado,
-      updatedAt: new Date().toISOString(),
-    };
+    lista.items.splice(indiceItem, 1);
+    lista.atualizadoEm = new Date().toISOString();
 
-    await this.salvarTodos(wishList);
-    return lista.items[itemIndex];
+    await this.salvarTodas(listas);
   }
 
-  
-  static async removerItem(userId, itemId) {
-    const wishList = await this.buscarTodos();
-    const lista = wishList.find((w) => w.userId === userId);
+  static async atualizarItem(userId, itemId, atualizacoes) {
+    const listas = await this.buscarTodas();
+    const lista = listas.find((l) => l.userId === userId);
 
     if (!lista) {
       throw new Error("Lista de desejos não encontrada");
     }
 
-    const itemIndex = lista.items.findIndex((item) => item.id === itemId);
-    if (itemIndex === -1) {
+    const item = lista.items.find((item) => item.id === itemId);
+    if (!item) {
       throw new Error("Item não encontrado");
     }
 
-    lista.items.splice(itemIndex, 1);
-    lista.updatedAt = new Date().toISOString();
+    Object.assign(item, atualizacoes);
+    lista.atualizadoEm = new Date().toISOString();
 
-    await this.salvarTodos(wishList);
-    return { message: "Item removido com sucesso" };
+    await this.salvarTodas(listas);
+    return item;
+  }
+
+  static async salvarTodas(listas) {
+    await fs.writeFile(ARQUIVO_LISTAS_DESEJO, JSON.stringify(listas, null, 2));
   }
 }
 
-ListaDesejo.init(); 
+// Inicializa o arquivo de listas de desejos
+ListaDesejo.init();
 
 module.exports = ListaDesejo;

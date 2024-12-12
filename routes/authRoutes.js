@@ -1,48 +1,43 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const Admin = require("../models/admin");
+const { generateToken } = require("../utils/jwt");
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "chave-secreta";
-
-const gerarToken = (usuario) => {
-  const payload = {
-    id: user.id,
-    email: user.email,
-    role: user.papel || "user",
-  };
-
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
-};
 
 router.post("/login", async (req, res) => {
   try {
     const { email, senha } = req.body;
 
-    if (!email || !senha) {
-      return res.status(400).json({ erro: "Email e senha são obrigatórios" });
-    }
-
-    let usuario = await Admin.buscarPorEmail(email);
+    // Tenta login como administrador primeiro
+    let usuario = await Admin.findByEmail(email);
     if (!usuario) {
-      usuario = await User.buscarPorEmail(email);
+      // Se não for administrador, tenta como usuário normal
+      usuario = await User.findByEmail(email);
     }
 
-    if (!usuario || usuario.senha !== senha) {
+    // Verifica se o usuário existe e compara a senha
+    if (!usuario || !(await bcrypt.compare(senha, usuario.password))) {
       return res.status(401).json({ erro: "Credenciais inválidas" });
     }
 
-    const token = gerarToken(usuario);
+    // Gera o token JWT
+    const token = generateToken(usuario);
 
+    // Retorna o token e os dados do usuário
     res.json({
       token,
-      funcao: usuario.papel || "user",
+      usuario: {
+        id: usuario.id,
+        nome: usuario.name,
+        email: usuario.email,
+        funcao: usuario.role,
+      },
     });
   } catch (erro) {
-    console.error(`[Erro de Autenticação]: ${erro.message}`);
-    res.status(500).json({ erro: "Erro interno no servidor" });
+    // Tratamento de erro
+    res.status(500).json({ erro: erro.message });
   }
 });
 

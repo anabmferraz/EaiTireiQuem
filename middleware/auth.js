@@ -4,6 +4,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "sua-chave-secreta";
 
 const auth = (req, res, next) => {
   try {
+    // não está sendo usado
     const authHeader = req.headers.authorization;
     const token = req.headers.authorization?.split(" ")[1];
 

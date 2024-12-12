@@ -5,8 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const USERS_FILE = path.join(__dirname, "../data/users.json");
 
-class Usuario {
-  
+class User {
   static async inicializar() {
     try {
       await fs.access(USERS_FILE);
@@ -15,7 +14,6 @@ class Usuario {
     }
   }
 
-  
   static async buscarTodos() {
     try {
       const data = await fs.readFile(USERS_FILE, "utf8");
@@ -26,11 +24,9 @@ class Usuario {
     }
   }
 
-  
   static async criar({ nome, email, senha }) {
     const users = await this.buscarTodos();
 
-    
     if (users.some((user) => user.email === email)) {
       throw new Error("E-mail já cadastrado");
     }
@@ -49,12 +45,10 @@ class Usuario {
     users.push(novoUser);
     await this.salvarTodos(users);
 
-    
     const { senha: _, ...userSemSenha } = novoUser;
     return userSemSenha;
   }
 
- 
   static async salvarTodos(users) {
     try {
       await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
@@ -63,20 +57,16 @@ class Usuario {
     }
   }
 
-  
   static async buscarPorEmail(email) {
     const users = await this.buscarTodos();
     return users.find((user) => user.email === email);
   }
 
-  
   static async buscarPorId(id) {
     const users = await this.buscarTodos();
     return users.find((user) => user.id === id);
   }
 }
-
-
-Usuario.inicializar();
+User.inicializar();
 
 module.exports = Usuario;

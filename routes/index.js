@@ -2,23 +2,25 @@ const express = require("express");
 const router = express.Router();
 
 const routes = {
-  grupos: require("./groupRoutes"), // Roteador de grupos
-  especial: require("./specialRoutes"), // Roteador de rotas especiais
-  auth: require("./authRoutes"), // Roteador de autenticação
-  admin: require("./adminRoutes"), // Roteador de admin
-  usuarios: require("./logicauser"), // Roteador de usuários
+  grupos: require("./groupController"),
+  especial: require("./specialRoutes"),
+  auth: require("./authRoutes"),
+  admin: require("./adminRoutes"),
+  usuarios: require("./logicauser"),
 };
 
-// Usando Object.entries para registrar rotas
+// Itera sobre as rotas e registra cada uma
 Object.entries(routes).forEach(([path, routeHandler]) => {
   if (
     typeof routeHandler === "function" ||
     typeof routeHandler.use === "function"
   ) {
-    router.use(`/${path}`, routeHandler);
+    router.use(`/${path}`, routeHandler); // Registra o roteador
   } else {
     console.error(
-      `Roteador para "${path}" não é válido. Verifique a exportação.`
+      console.error(
+        `Erro: Roteador para "${path}" não é válido. Verifique a exportação do arquivo ${path}Routes.`
+      )
     );
   }
 });

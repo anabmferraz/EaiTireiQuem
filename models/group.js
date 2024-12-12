@@ -1,7 +1,8 @@
 const fs = require("fs").promises;
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { embaralhar } = require("../utils/arrays");
+const { embaralhar } = require("../utils/arrayUtils");
+
 const ARQUIVO_GRUPOS = path.join(__dirname, "../data/grupos.json");
 
 class Grupo {
@@ -41,27 +42,29 @@ class Grupo {
     return novoGrupo;
   }
 
-  static async addParticipante(idGrupo, idUsuario) {
-    const grupo = await this.buscarPorId(idGrupo);
+  static async adicionarParticipante(idGrupo, idUsuario) {
+    const grupos = await this.buscarTodos();
+    const grupo = grupos.find((g) => g.id === idGrupo);
 
-    if (!grupo) throw new Error("Grupo não encontrado...");
+    if (!grupo) throw new Error("Grupo não encontrado.");
     if (grupo.status !== "aberto")
       throw new Error("Grupo não está aberto para novos participantes.");
     if (grupo.participantes.includes(idUsuario))
-      throw new Error("Usuário já está no grupo");
+      throw new Error("Usuário já está no grupo.");
 
     grupo.participantes.push(idUsuario);
-    await this.salvarTodos(await this.buscarTodos());
+    await this.salvarTodos(grupos);
     return grupo;
   }
 
   static async realizarSorteio(idGrupo) {
-    const grupo = await this.buscarPorId(idGrupo);
+    const grupos = await this.buscarTodos();
+    const grupo = grupos.find((g) => g.id === idGrupo);
 
-    if (!grupo) throw new Error("Grupo não encontrado...");
+    if (!grupo) throw new Error("Grupo não encontrado.");
     if (grupo.participantes.length < 3)
       throw new Error(
-        "É necessário pelo menos 3 participantes para realizar o sorteio"
+        "É necessário pelo menos 3 participantes para realizar o sorteio."
       );
 
     const participantes = [...grupo.participantes];
@@ -69,38 +72,39 @@ class Grupo {
     let resultadoSorteio = {};
 
     while (!sorteioValido) {
+      const participantesEmbaralhados = embaralhar([...participantes]);
       sorteioValido = true;
       resultadoSorteio = {};
-      const participantesEmbaralhados = embaralhar([...participantes]);
 
       for (let i = 0; i < participantes.length; i++) {
-        const amgSecreto = participantes[i];
-        const pessoaSorteada = participantesEmbaralhados[i];
+        const amigoSecreto = participantes[i];
+        const sorteado = participantesEmbaralhados[i];
 
-        if (amgSecreto === pessoaSorteada) {
+        if (amigoSecreto === sorteado) {
           sorteioValido = false;
           break;
         }
-        resultadoSorteio[amgSecreto] = pessoaSorteada;
+        resultadoSorteio[amigoSecreto] = sorteado;
       }
     }
 
     grupo.resultadoSorteio = resultadoSorteio;
     grupo.dataSorteio = new Date().toISOString();
     grupo.status = "sorteado";
-    await this.salvarTodos(await this.buscarTodos());
+
+    await this.salvarTodos(grupos);
     return grupo;
   }
 
   static async atualizar(id, grupoAtualizado) {
     const grupos = await this.buscarTodos();
-    const grupo = grupos.find((g) => g.id === id);
+    const indice = grupos.findIndex((g) => g.id === id);
 
-    if (!grupo) throw new Error("Grupo não encontrado...");
+    if (indice === -1) throw new Error("Grupo não encontrado.");
 
-    Object.assign(grupo, grupoAtualizado);
+    grupos[indice] = { ...grupos[indice], ...grupoAtualizado };
     await this.salvarTodos(grupos);
-    return grupo;
+    return grupos[indice];
   }
 
   static async excluir(id) {
@@ -111,14 +115,13 @@ class Grupo {
 
   static async buscarPorId(id) {
     const grupos = await this.buscarTodos();
-    return grupos.find((grupo) => grupo.id === id);
+    return grupos.find((g) => g.id === id);
   }
 
   static async buscarGruposDoUsuario(idUsuario) {
     const grupos = await this.buscarTodos();
     return grupos.filter(
-      (grupo) =>
-        grupo.participantes.includes(idUsuario) || grupo.idAdmin === idUsuario
+      (g) => g.participantes.includes(idUsuario) || g.idAdmin === idUsuario
     );
   }
 }

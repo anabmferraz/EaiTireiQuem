@@ -1,85 +1,37 @@
 const express = require("express");
-const { auth, Admin } = require("../middleware/auth");
-const logicagrupo = require("../routes/groupRoutes");
-console.log(logicagrupo); // Adicione este log
+const { auth, isAdmin } = require("../middleware/auth");
+const { reajustar } = require("../services/drawService");
 
 const router = express.Router();
 
 /**
  * @swagger
- * /api/grupos:
+ * /api/special/redistribute/{groupId}:
  *   post:
- *     summary: Criar um novo grupo de Amigo Secreto
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- */
-router.post("/", auth, logicagrupo.createGroup);
-
-/**
- * @swagger
- * /api/grupos/{id}/adicionar-usuario:
- *   patch:
- *     summary: Adicionar um participante ao grupo
- *     security:
- *       - bearerAuth: []
+ *     summary: Redistribuir o sorteio do Amigo Secreto para um grupo
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: groupId
  *         required: true
  *         schema:
  *           type: string
- */
-router.patch("/:id/adicionar-usuario", auth, logicagrupo.addParticipant);
-
-/**
- * @swagger
- * /api/grupos/{id}/sorteio:
- *   post:
- *     summary: Realizar o sorteio do Amigo Secreto
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     responses:
+ *       200:
+ *         description: Sorteio redistribuído com sucesso
+ *       403:
+ *         description: Não autorizado
+ *       404:
+ *         description: Grupo não encontrado
  */
-router.post("/:id/sorteio", auth, logicagrupo.performDraw);
-
-/**
- * @swagger
- * /api/grupos/{id}/resultado:
- *   get:
- *     summary: Obter resultados do sorteio
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- */
-router.get("/:id/resultado", auth, logicagrupo.getDrawResults);
-
-/**
- * @swagger
- * /api/grupos/usuario:
- *   get:
- *     summary: Obter grupos do usuário
- *     security:
- *       - bearerAuth: []
- */
-router.get("/usuario", auth, logicagrupo.getUserGroups);
+router.post("/reajustargroupId", auth, isAdmin, async (req, res) => {
+  try {
+    const result = await reajustar(req.params.groupId);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 module.exports = router;
