@@ -1,6 +1,5 @@
 const fs = require("fs").promises;
 const path = require("path");
-const { v4: uuidv4 } = require("uuid");
 const { embaralhar } = require("../utils/arrays");
 
 const ARQUIVO_GRUPOS = path.join(__dirname, "../data/grupos.json");
@@ -10,24 +9,33 @@ class Grupo {
     try {
       await fs.access(ARQUIVO_GRUPOS);
     } catch {
-      await fs.writeFile(ARQUIVO_GRUPOS, "[]");
+      // Inicializa o arquivo com um contador e lista de grupos vazios
+      await fs.writeFile(
+        ARQUIVO_GRUPOS,
+        JSON.stringify({ counter: 0, grupos: [] })
+      );
     }
   }
 
   static async buscarTodos() {
-    const dados = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
-    return JSON.parse(dados);
+    const data = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
+    const { grupos } = JSON.parse(data);
+    return grupos || [];
   }
 
-  static async salvarTodos(grupos) {
-    await fs.writeFile(ARQUIVO_GRUPOS, JSON.stringify(grupos, null, 2));
+  static async salvarTodos({ counter, grupos }) {
+    await fs.writeFile(
+      ARQUIVO_GRUPOS,
+      JSON.stringify({ counter, grupos }, null, 2)
+    );
   }
 
   static async criar({ nome, idAdmin }) {
-    const grupos = await this.buscarTodos();
+    const data = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
+    const { counter, grupos } = JSON.parse(data);
 
     const novoGrupo = {
-      id: uuidv4(),
+      id: counter, // ID incremental
       nome,
       idAdmin,
       participantes: [idAdmin],
@@ -38,12 +46,15 @@ class Grupo {
     };
 
     grupos.push(novoGrupo);
-    await this.salvarTodos(grupos);
+
+    // Incrementa o contador e salva os dados atualizados
+    await this.salvarTodos({ counter: counter + 1, grupos });
     return novoGrupo;
   }
 
   static async adicionarParticipante(idGrupo, idUsuario) {
-    const grupos = await this.buscarTodos();
+    const data = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
+    const { counter, grupos } = JSON.parse(data);
     const grupo = grupos.find((g) => g.id === idGrupo);
 
     if (!grupo) throw new Error("Grupo não encontrado.");
@@ -53,76 +64,24 @@ class Grupo {
       throw new Error("Usuário já está no grupo.");
 
     grupo.participantes.push(idUsuario);
-    await this.salvarTodos(grupos);
+
+    await this.salvarTodos({ counter, grupos });
     return grupo;
-  }
-
-  static async realizarSorteio(idGrupo) {
-    const grupos = await this.buscarTodos();
-    const grupo = grupos.find((g) => g.id === idGrupo);
-
-    if (!grupo) throw new Error("Grupo não encontrado.");
-    if (grupo.participantes.length < 3)
-      throw new Error(
-        "É necessário pelo menos 3 participantes para realizar o sorteio."
-      );
-
-    const participantes = [...grupo.participantes];
-    let sorteioValido = false;
-    let resultadoSorteio = {};
-
-    while (!sorteioValido) {
-      const participantesEmbaralhados = embaralhar([...participantes]);
-      sorteioValido = true;
-      resultadoSorteio = {};
-
-      for (let i = 0; i < participantes.length; i++) {
-        const amigoSecreto = participantes[i];
-        const sorteado = participantesEmbaralhados[i];
-
-        if (amigoSecreto === sorteado) {
-          sorteioValido = false;
-          break;
-        }
-        resultadoSorteio[amigoSecreto] = sorteado;
-      }
-    }
-
-    grupo.resultadoSorteio = resultadoSorteio;
-    grupo.dataSorteio = new Date().toISOString();
-    grupo.status = "sorteado";
-
-    await this.salvarTodos(grupos);
-    return grupo;
-  }
-
-  static async atualizar(id, grupoAtualizado) {
-    const grupos = await this.buscarTodos();
-    const indice = grupos.findIndex((g) => g.id === id);
-
-    if (indice === -1) throw new Error("Grupo não encontrado.");
-
-    grupos[indice] = { ...grupos[indice], ...grupoAtualizado };
-    await this.salvarTodos(grupos);
-    return grupos[indice];
-  }
-
-  static async excluir(id) {
-    const grupos = await this.buscarTodos();
-    const gruposFiltrados = grupos.filter((g) => g.id !== id);
-    await this.salvarTodos(gruposFiltrados);
   }
 
   static async buscarPorId(id) {
-    const grupos = await this.buscarTodos();
+    const data = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
+    const { grupos } = JSON.parse(data);
     return grupos.find((g) => g.id === id);
   }
 
-  static async buscarGruposDoUsuario(idUsuario) {
-    const grupos = await this.buscarTodos();
-    return grupos.filter(
-      (g) => g.participantes.includes(idUsuario) || g.idAdmin === idUsuario
-    );
+  static async excluir(id) {
+    const data = await fs.readFile(ARQUIVO_GRUPOS, "utf8");
+    const { counter, grupos } = JSON.parse(data);
+
+    const gruposFiltrados = grupos.filter((g) => g.id !== id);
+
+    await this.salvarTodos({ counter, grupos: gruposFiltrados });
   }
 }
 

@@ -11,14 +11,14 @@ router.post("/login", async (req, res) => {
     const { email, senha } = req.body;
 
     // Tenta login como administrador primeiro
-    let usuario = await Admin.findByEmail(email);
+    let usuario = await Admin.buscarPorEmail(email);
     if (!usuario) {
       // Se não for administrador, tenta como usuário normal
-      usuario = await User.findByEmail(email);
+      usuario = await User.buscarPorEmail(email);
     }
 
     // Verifica se o usuário existe e compara a senha
-    if (!usuario || !(await bcrypt.compare(senha, usuario.password))) {
+    if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
       return res.status(401).json({ erro: "Credenciais inválidas" });
     }
 
@@ -30,9 +30,9 @@ router.post("/login", async (req, res) => {
       token,
       usuario: {
         id: usuario.id,
-        nome: usuario.name,
+        nome: usuario.nome,
         email: usuario.email,
-        funcao: usuario.role,
+        funcao: usuario.papel,
       },
     });
   } catch (erro) {

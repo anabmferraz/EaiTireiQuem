@@ -1,18 +1,19 @@
-// groupRoutes.js
 const express = require("express");
 const router = express.Router();
-const { auth } = require("../middleware/auth");
+const { auth, isAdmin } = require("../middleware/auth");
 const {
   criarGrupo,
   adicionarParticipante,
   realizarSorteio,
   obterResultadosSorteio,
   obterGruposUsuario,
+  listarTodosGrupos,
+  excluirGrupo,
 } = require("../controller/groupController");
 
 /**
  * @swagger
- * /api/groups:
+ * /api/grupos/criar:
  *   post:
  *     summary: Create a new Secret Santa group
  *     security:
@@ -24,17 +25,17 @@ const {
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               nome:
  *                 type: string
  *     responses:
  *       201:
  *         description: Group created successfully
  */
-router.post("/grupos", auth, criarGrupo);
+router.post("/criar", auth, criarGrupo);
 
 /**
  * @swagger
- * /api/groups/{id}/add-user:
+ * /api/grupos/{id}/adicionar-participante:
  *   patch:
  *     summary: Add a participant to a group
  *     security:
@@ -57,16 +58,12 @@ router.post("/grupos", auth, criarGrupo);
  *     responses:
  *       200:
  *         description: Participant added successfully
- *       403:
- *         description: Not authorized
- *       404:
- *         description: Group not found
  */
-router.patch("/grupos/:id/participantes", auth, adicionarParticipante);
+router.patch("/:id/adicionar-participante", auth, adicionarParticipante);
 
 /**
  * @swagger
- * /api/groups/{id}/draw:
+ * /api/grupos/{id}/sortear:
  *   post:
  *     summary: Perform the Secret Santa draw
  *     security:
@@ -80,16 +77,12 @@ router.patch("/grupos/:id/participantes", auth, adicionarParticipante);
  *     responses:
  *       200:
  *         description: Draw completed successfully
- *       403:
- *         description: Not authorized
- *       404:
- *         description: Group not found
  */
-router.post("/grupos/:id/sorteio", auth, realizarSorteio);
+router.post("/:id/sortear", auth, realizarSorteio);
 
 /**
  * @swagger
- * /api/groups/{id}/result:
+ * /api/grupos/{id}/resultados:
  *   get:
  *     summary: Get draw results
  *     security:
@@ -103,18 +96,12 @@ router.post("/grupos/:id/sorteio", auth, realizarSorteio);
  *     responses:
  *       200:
  *         description: Results retrieved successfully
- *       400:
- *         description: Draw has not been performed yet
- *       403:
- *         description: Not authorized
- *       404:
- *         description: Group not found
  */
-router.get("/grupos/:id/resultados", auth, obterResultadosSorteio);
+router.get("/:id/resultados", auth, obterResultadosSorteio);
 
 /**
  * @swagger
- * /api/groups/user:
+ * /api/grupos/listar-usuario:
  *   get:
  *     summary: Get all groups a user is part of
  *     security:
@@ -123,6 +110,38 @@ router.get("/grupos/:id/resultados", auth, obterResultadosSorteio);
  *       200:
  *         description: List of groups retrieved successfully
  */
-router.get("/grupos", auth, obterGruposUsuario);
+router.get("/listar-usuario", auth, obterGruposUsuario);
+
+/**
+ * @swagger
+ * /api/grupos:
+ *   get:
+ *     summary: List all groups
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all groups retrieved successfully
+ */
+router.get("/", auth, isAdmin, listarTodosGrupos);
+
+/**
+ * @swagger
+ * /api/grupos/{id}:
+ *   delete:
+ *     summary: Delete a group
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Group deleted successfully
+ */
+router.delete("/:id", auth, isAdmin, excluirGrupo);
 
 module.exports = router;

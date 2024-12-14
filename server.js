@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const swaggerSetup = require("./swagger");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger_doc.json"); // Corrija o caminho se necessário
 const routes = require("./routes");
 const manipuladorDeErros = require("./middleware/error");
 
@@ -19,8 +20,8 @@ app.use(
 // Middlewares gerais
 app.use(express.json());
 
-// Configuração do Swagger
-swaggerSetup(app);
+// Correção: passando o swaggerDocument, não o swaggerUi
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rotas
 app.use("/api", routes);

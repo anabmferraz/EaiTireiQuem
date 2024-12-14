@@ -1,10 +1,13 @@
-[
-  {
-    "id": "8e945621-9883-4385-8683-7ae3fdaef197",
-    "nome": "João Silva",
-    "email": "joao.silva@gmail.com",
-    "senha": "$2b$10$e9ovFTW.v28ebMdzBRhlqOcC2K0y21P79htCR9GEFHDBsLvnCrj3K",
-    "papel": "participante",
-    "criadoEm": "2024-12-05T23:33:08.079Z"
-  }
-]
+{
+  "counter": 1,
+  "users": [
+    {
+      "id": 0,
+      "nome": "João Silva",
+      "email": "joao@gmail.com",
+      "senha": "$2b$10$SjWKs/f6/etHJTYTy1qjF.QG1EkHp0QBSt1GrebMw1fPXil.mw0HO",
+      "papel": "participante",
+      "criadoEm": "2024-12-14T02:13:43.046Z"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
-const bcrypt = require("bcrypt");
+// Removida a linha de importação do bcrypt aqui, já que está sendo importado em outro lugar
 const { v4: uuidv4 } = require("uuid");
 
 const ADMINS_FILE = path.join(__dirname, "../data/admins.json");
@@ -15,11 +15,14 @@ class Admin {
     }
   }
   static async criarAdminPadrao() {
+    // Movido o bcrypt para ser importado aqui quando necessário
+    const bcrypt = require("bcryptjs");
+    const senhaCriptografada = await bcrypt.hash("admin123", 10);
     return {
       id: uuidv4(),
       nome: "admin",
       email: "admin@gmail.com",
-      senha: "admin123",
+      senha: senhaCriptografada,
       papel: "admin",
       criadoEm: new Date().toISOString(),
     };
@@ -32,6 +35,7 @@ class Admin {
 
   static async criar({ nome, email, senha }) {
     const admins = await this.buscarTodos();
+    const bcrypt = require("bcryptjs");
 
     if (admins.some((admin) => admin.email === email)) {
       throw new Error("E-mail já cadastrado");

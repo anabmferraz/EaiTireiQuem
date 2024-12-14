@@ -1,12 +1,16 @@
 const express = require("express");
-const { auth, isAdmin } = require("../middleware/auth");
-const logicaUser = require("../routes/userController");
-
 const router = express.Router();
+const { auth, isAdmin } = require("../middleware/auth");
+const {
+  criar,
+  buscarTodos,
+  excluirUsuario,
+} = require("../controller/userController");
 
-// Rota para criar um usuário
-router.post("/", logicaUser.criar);
+router.post("/criar-usuario", criar);
 
-router.get("/", auth, isAdmin, logicaUser.buscarTodos);
+router.get("/listar-usuarios", auth, isAdmin, buscarTodos);
+
+router.delete("/usuarios/:id", auth, isAdmin, excluirUsuario);
 
 module.exports = router;

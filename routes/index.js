@@ -6,7 +6,7 @@ const routes = {
   especial: require("./specialRoutes"),
   auth: require("./authRoutes"),
   admin: require("./adminRoutes"),
-  usuarios: require("./logicauser"),
+  usuarios: require("./usersRoutes"),
 };
 
 // Itera sobre as rotas e registra cada uma

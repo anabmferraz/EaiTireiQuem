@@ -1,16 +1,16 @@
 const Group = require("../models/group");
 const User = require("../models/user");
-const { validateGroupName } = require("../utils/validation");
+const { validarNomeGrupo } = require("../utils/validation");
 
 // Função para criar um novo grupo
 async function criarGrupo(req, res) {
   try {
-    if (!validateGroupName(req.body.name)) {
+    if (!validarNomeGrupo(req.body.nome)) {
       return res.status(400).json({ error: "Nome do grupo inválido" });
     }
 
-    const grupo = await Group.create({
-      name: req.body.name,
+    const grupo = await Group.criar({
+      nome: req.body.nome,
       adminId: req.user.id,
     });
     res.status(201).json(grupo);
@@ -22,14 +22,14 @@ async function criarGrupo(req, res) {
 // Função para adicionar um participante ao grupo
 async function adicionarParticipante(req, res) {
   try {
-    const grupo = await Group.findById(req.params.id);
+    const grupo = await Group.buscarPorId(req.params.id);
     if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
 
     if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ error: "Não autorizado" });
     }
 
-    const grupoAtualizado = await Group.addParticipant(
+    const grupoAtualizado = await Group.adicionarParticipante(
       req.params.id,
       req.body.userId
     );
@@ -43,7 +43,7 @@ async function adicionarParticipante(req, res) {
 // Função para realizar o sorteio do amigo secreto
 async function realizarSorteio(req, res) {
   try {
-    const grupo = await Group.findById(req.params.id);
+    const grupo = await Group.buscarPorId(req.params.id);
     if (!grupo) return res.status(404).json({ error: "Grupo não encontrado" });
 
     if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
@@ -78,7 +78,7 @@ async function obterResultadosSorteio(req, res) {
       return res.json({
         match: {
           id: receptor.id,
-          name: receptor.name,
+          nome: receptor.nome,
         },
       });
     }
@@ -98,6 +98,34 @@ async function obterGruposUsuario(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+// Função para listar todos os grupos
+async function listarTodosGrupos(req, res) {
+  try {
+    const grupos = await Group.buscarTodos(); // Busca todos os grupos do modelo
+    res.status(200).json(grupos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+// Função para excluir um grupo
+async function excluirGrupo(req, res) {
+  try {
+    const grupo = await Group.buscarPorId(req.params.id);
+
+    if (!grupo) {
+      return res.status(404).json({ error: "Grupo não encontrado" });
+    }
+
+    if (grupo.adminId !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Não autorizado" });
+    }
+
+    await Group.excluir(req.params.id); // Exclui o grupo no modelo
+    res.status(204).send(); // Retorna sucesso sem conteúdo
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports = {
   criarGrupo,
@@ -105,4 +133,6 @@ module.exports = {
   realizarSorteio,
   obterResultadosSorteio,
   obterGruposUsuario,
+  listarTodosGrupos,
+  excluirGrupo,
 };
