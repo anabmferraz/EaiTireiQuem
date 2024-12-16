@@ -4,7 +4,7 @@ const generateToken = (usuario) => {
   const payload = {
     id: usuario.id,
     email: usuario.email,
-    role: usuario.role || "user",
+    role: usuario.papel || "user",
   };
 
   const JWT_SECRET = process.env.JWT_SECRET || "chave-secreta";

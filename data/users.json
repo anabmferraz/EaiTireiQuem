@@ -1,13 +1,21 @@
 {
-  "counter": 1,
+  "counter": 4,
   "users": [
     {
       "id": 0,
       "nome": "João Silva",
       "email": "joao@gmail.com",
-      "senha": "$2b$10$SjWKs/f6/etHJTYTy1qjF.QG1EkHp0QBSt1GrebMw1fPXil.mw0HO",
+      "senha": "$2b$10$GE3j9OwwgRoirSN33h8zIusThiblLmmB2nij/213iNILMxJ3yvToS",
       "papel": "participante",
-      "criadoEm": "2024-12-14T02:13:43.046Z"
+      "criadoEm": "2024-12-14T03:19:11.058Z"
+    },
+    {
+      "id": 2,
+      "nome": "thai",
+      "email": "aathai@gmail.com",
+      "senha": "$2b$10$1ey6hLWSy.GmY6ogTtJxau6fQ5KJMieKyzVWqUoEXKDIINLipQqm6",
+      "papel": "participante",
+      "criadoEm": "2024-12-14T03:21:13.620Z"
     }
   ]
 }

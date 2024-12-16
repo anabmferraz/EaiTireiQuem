@@ -11,6 +11,6 @@ router.post("/criar-usuario", criar);
 
 router.get("/listar-usuarios", auth, isAdmin, buscarTodos);
 
-router.delete("/usuarios/:id", auth, isAdmin, excluirUsuario);
+router.delete("/deletar-usuario/:id", auth, isAdmin, excluirUsuario);
 
 module.exports = router;

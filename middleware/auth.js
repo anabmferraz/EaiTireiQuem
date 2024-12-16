@@ -4,17 +4,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "sua-chave-secreta";
 
 const auth = (req, res, next) => {
   try {
-    // não está sendo usado
     const authHeader = req.headers.authorization;
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
-    console.log("Token recebido:", token);
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("Usuário autenticado:", decoded);
+
     req.user = decoded;
 
     next();

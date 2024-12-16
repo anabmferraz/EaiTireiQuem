@@ -110,7 +110,7 @@ router.get("/:id/resultados", auth, obterResultadosSorteio);
  *       200:
  *         description: List of groups retrieved successfully
  */
-router.get("/listar-usuario", auth, obterGruposUsuario);
+router.get("/listar-usuario/:id", auth, obterGruposUsuario);
 
 /**
  * @swagger
@@ -142,6 +142,6 @@ router.get("/", auth, isAdmin, listarTodosGrupos);
  *       204:
  *         description: Group deleted successfully
  */
-router.delete("/:id", auth, isAdmin, excluirGrupo);
+router.delete("/deletar/:id", auth, isAdmin, excluirGrupo);
 
 module.exports = router;

@@ -18,14 +18,20 @@ const buscarTodos = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-async function excluirUsuario(req, res) {
+const excluirUsuario = async (req, res) => {
   try {
+    // Verifica se o usuário que está tentando excluir tem permissão
+    const usuario = await User.buscarPorId(req.params.id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
     await User.excluir(req.params.id);
-    res.status(204).send();
+    res.status(200).json({ message: "Usuário excluído com sucesso!" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
 function removeSensitiveData(user) {
   const { password, ...safeUser } = user;
   return safeUser;

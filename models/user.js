@@ -62,13 +62,14 @@ class User {
   static async buscarPorId(id) {
     const data = await fs.readFile(USERS_FILE, "utf8");
     const { users } = JSON.parse(data);
+    id = Number(id);
     return users.find((user) => user.id === id);
   }
 
   static async excluir(id) {
     const data = await fs.readFile(USERS_FILE, "utf8");
     const { counter, users } = JSON.parse(data);
-
+    id = Number(id);
     const usuariosAtualizados = users.filter((user) => user.id !== id);
     await this.salvarTodos({ counter, users: usuariosAtualizados });
   }
